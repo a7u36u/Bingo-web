@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Bingo Chilensis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/panel.css">
+</head>
+<body>
+
+    <div class="panel-container">
+        <h1>🎙️ Panel Cantante</h1>
+        
+        <div class="info">
+            Restan: <span id="restantes">75</span> bolas
+        </div>
+
+        <div class="controles-auto">
+            <select id="velocidad">
+                <option value="3000">⏱️ Rápido (3s)</option>
+                <option value="5000" selected>⏱️ Normal (5s)</option>
+                <option value="8000">⏱️ Lento (8s)</option>
+                <option value="12000">⏱️ Familiar (12s)</option>
+            </select>
+            <button id="btnAuto" class="btn-auto">▶️ MODO AUTOMÁTICO</button>
+        </div>
+
+        <button class="btn-principal" id="btnSacar">
+            CANTAR<br>NÚMERO
+        </button>
+
+        <div id="ultimaFrase"></div>
+
+        <h3>Historial</h3>
+        <div class="historial" id="listaHistorial"></div>
+
+        <button class="btn-reset" id="btnReset">Reiniciar Sorteo</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, updateDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js";
+        import { obtenerFrase } from "./js/frases.js";
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const refJuego = doc(db, "juego", "actual");
+
+        let historial = [];
+        let intervaloAuto = null;
+
+        // Función de Voz
+        function hablar(texto) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(texto);
+            utter.lang = 'es-CL';
+            window.speechSynthesis.speak(utter);
+        }
+
+        // Función para sacar número
+        async function sacarNumero() {
+            if (historial.length >= 75) {
+                detenerAuto();
+                alert("¡Se acabaron las bolas!");
+                return;
+            }
+
+            let nuevoNum;
+            do {
+                nuevoNum = Math.floor(Math.random() * 75) + 1;
+            } while (historial.includes(nuevoNum));
+
+            historial.push(nuevoNum);
+            const frase = obtenerFrase(nuevoNum);
+
+            // Actualizar Firebase
+            await updateDoc(refJuego, {
+                numeroCantado: nuevoNum,
+                frase: frase,
+                historial: historial
+            });
+
+            hablar(frase);
+            render();
+        }
+
+        // Lógica Automática
+        function toggleAuto() {
+            if (intervaloAuto) {
+                detenerAuto();
+            } else {
+                const ms = document.getElementById('velocidad').value;
+                document.getElementById('btnAuto').innerText = "🛑 DETENER";
+                document.getElementById('btnAuto').style.background = "#d63031";
+                sacarNumero();
+                intervaloAuto = setInterval(sacarNumero, ms);
+            }
+        }
+
+        function detenerAuto() {
+            clearInterval(intervaloAuto);
+            intervaloAuto = null;
+            document.getElementById('btnAuto').innerText = "▶️ MODO AUTOMÁTICO";
+            document.getElementById('btnAuto').style.background = "#0984e3";
+        }
+
+        // Reiniciar
+        async function reiniciar() {
+            if(confirm("¿Seguro que quieres reiniciar todo el bingo?")) {
+                detenerAuto();
+                historial = [];
+                await updateDoc(refJuego, {
+                    numeroCantado: 0,
+                    frase: "¡Empieza el juego!",
+                    historial: [],
+                    ganador: null,
+                    juegoPausado: false
+                });
+                render();
+            }
+        }
+
+        function render() {
+            document.getElementById('restantes').innerText = 75 - historial.length;
+            document.getElementById('listaHistorial').innerHTML = [...historial].reverse()
+                .map(n => `<div class="num-bola">${n}</div>`).join('');
+            document.getElementById('ultimaFrase').innerText = historial.length > 0 ? obtenerFrase(historial[historial.length-1]) : "";
+        }
+
+        // Escuchar Ganador (Alerta de Bingo)
+        onSnapshot(refJuego, (snapshot) => {
+            const data = snapshot.data();
+            if (data && data.ganador && data.juegoPausado) {
+                detenerAuto();
+                hablar("¡Atención! " + data.ganador + " ha gritado bingo.");
+                setTimeout(() => {
+                    if(confirm("🚨 ¡BINGO DE " + data.ganador.toUpperCase() + "! 🚨\n\n¿Deseas validar y continuar?")) {
+                        updateDoc(refJuego, { ganador: null, juegoPausado: false });
+                    }
+                }, 500);
+            }
+        });
+
+        // Eventos
+        document.getElementById('btnSacar').onclick = () => { detenerAuto(); sacarNumero(); };
+        document.getElementById('btnAuto').onclick = toggleAuto;
+        document.getElementById('btnReset').onclick = reiniciar;
+
+        // Carga inicial
+        const init = async () => {
+            const docSnap = await getDoc(refJuego);
+            if (docSnap.exists()) {
+                historial = docSnap.data().historial || [];
+                render();
+            }
+        };
+        init();
+    </script>
+</body>
+</html>

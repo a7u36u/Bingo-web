@@ -1,0 +1,113 @@
+/* Pantalla del número actual */
+.pantalla-numero {
+    background: var(--blanco);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-bottom: 5px solid var(--rojo-chile);
+}
+
+.num-grande {
+    font-size: 5rem;
+    font-weight: bold;
+    color: var(--rojo-chile);
+    display: block;
+    line-height: 1;
+}
+
+.talla {
+    font-style: italic;
+    color: var(--oscuro);
+    font-size: 1.3rem;
+    margin-top: 10px;
+}
+
+/* El Cartón */
+.carton {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    background: var(--oscuro);
+    padding: 12px;
+    border-radius: 15px;
+    margin: 0 auto;
+    max-width: 450px;
+}
+
+.celda {
+    background: var(--blanco);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.4rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.header {
+    background: var(--azul-chile);
+    color: var(--blanco);
+    font-size: 1.6rem;
+}
+
+.marcado {
+    background: var(--rojo-chile) !important;
+    color: var(--blanco);
+    transform: scale(0.9);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+.libre {
+    background: #fab1a0;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Botón de Bingo */
+#btnBingo {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+    background: var(--amarillo-bingo);
+    font-size: 2.2rem;
+    margin: 25px 0;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 0 #d4ac0d;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#btnBingo:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #d4ac0d;
+}
+
+.controles-carton {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .btn-chico {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            background: #636e72;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .aviso-falta {
+            background: #ffeaa7;
+            padding: 5px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #d35400;
+            display: none; /* Se muestra solo cuando falten pocos */
+        }

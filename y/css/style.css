@@ -1,0 +1,50 @@
+/* Variables de colores para mantener la consistencia */
+:root {
+    --rojo-chile: #d63031;
+    --azul-chile: #0984e3;
+    --oscuro: #2d3436;
+    --gris-claro: #f0f2f5;
+    --blanco: #ffffff;
+    --amarillo-bingo: #f1c40f;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--gris-claro);
+    margin: 0;
+    padding: 10px;
+    text-align: center;
+    color: var(--oscuro);
+}
+
+/* Animaciones de la Tómbola */
+@keyframes aparecerNumero {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); color: var(--rojo-chile); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.animar-numero {
+    animation: aparecerNumero 0.5s ease-out;
+}
+
+/* Componentes Comunes */
+.contenedor-blanco {
+    background: var(--blanco);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.btn {
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}

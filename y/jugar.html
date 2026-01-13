@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cartón - Bingo Chilensis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/juego.css">
+   
+</head>
+<body>
+
+    <div class="pantalla-numero">
+        <span class="num-grande" id="numActual">--</span>
+        <div class="talla" id="txtTalla">¡Toca un número para activar voz!</div>
+        <div id="avisoFalta" class="aviso-falta"></div>
+    </div>
+
+    <div class="controles-carton">
+        <button class="btn-chico" id="btnNuevoCarton">🔄 Cambiar Números</button>
+        <button class="btn-chico" id="btnLimpiar">🧹 Limpiar Marcado</button>
+    </div>
+
+    <div class="carton" id="carton">
+        <div class="celda header">B</div>
+        <div class="celda header">I</div>
+        <div class="celda header">N</div>
+        <div class="celda header">G</div>
+        <div class="celda header">O</div>
+    </div>
+
+    <button id="btnBingo">🎰 ¡BINGO! 🎰</button>
+
+    <div class="historial-container">
+        <strong>Números que ya salieron:</strong>
+        <div class="lista-historial" id="historial"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { firebaseConfig } from "./js/config.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const refJuego = doc(db, "juego", "actual");
+
+        let numerosEnCarton = [];
+        let numerosQueHanSalido = [];
+
+        // --- GENERAR CARTÓN ---
+        function crearCarton() {
+            const container = document.getElementById('carton');
+            // Limpiar celdas viejas (manteniendo el header)
+            const headers = container.querySelectorAll('.header');
+            container.innerHTML = '';
+            headers.forEach(h => container.appendChild(h));
+
+            const columnas = [
+                {min:1, max:15}, {min:16, max:30}, {min:31, max:45}, {min:46, max:60}, {min:61, max:75}
+            ];
+            
+            numerosEnCarton = [];
+            let matriz = [];
+
+            columnas.forEach(col => {
+                let nums = [];
+                while(nums.length < 5) {
+                    let n = Math.floor(Math.random() * (col.max - col.min + 1)) + col.min;
+                    if(!nums.includes(n)) nums.push(n);
+                }
+                matriz.push(nums.sort((a,b) => a-b));
+            });
+
+            for(let fila=0; fila<5; fila++) {
+                for(let col=0; col<5; col++) {
+                    const div = document.createElement('div');
+                    div.className = 'celda';
+                    let valor = matriz[col][fila];
+                    
+                    if(fila === 2 && col === 2) {
+                        div.innerText = "LIBRE";
+                        div.classList.add('marcado', 'libre');
+                    } else {
+                        div.innerText = valor;
+                        numerosEnCarton.push(valor);
+                        div.onclick = () => {
+                            if (numerosQueHanSalido.includes(valor)) {
+                                div.classList.toggle('marcado');
+                                chequearCuantoFalta();
+                            } else {
+                                alert("¡Ese número aún no sale!");
+                            }
+                        };
+                    }
+                    container.appendChild(div);
+                }
+            }
+        }
+
+        // --- VALIDACIÓN: ¿CUÁNTO FALTA? ---
+        function chequearCuantoFalta() {
+            const marcados = document.querySelectorAll('.celda.marcado:not(.libre)');
+            const faltan = 24 - marcados.length;
+            const aviso = document.getElementById('avisoFalta');
+
+            if (faltan <= 3 && faltan > 0) {
+                aviso.innerText = `¡OJO! Te faltan solo ${faltan} números`;
+                aviso.style.display = 'block';
+            } else if (faltan === 0) {
+                aviso.innerText = "¡TIENES BINGO! ¡PRESIONA EL BOTÓN!";
+                aviso.style.background = "#55efc4";
+            } else {
+                aviso.style.display = 'none';
+            }
+        }
+
+        function hablar(texto) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(texto);
+            utter.lang = 'es-CL'; 
+            window.speechSynthesis.speak(utter);
+        }
+
+        // --- BOTONES DE CONTROL ---
+        document.getElementById('btnNuevoCarton').onclick = () => {
+            if(confirm("¿Quieres generar un cartón nuevo? Se borrará lo marcado.")) {
+                crearCarton();
+            }
+        };
+
+        document.getElementById('btnLimpiar').onclick = () => {
+            document.querySelectorAll('.celda').forEach(c => {
+                if(!c.classList.contains('libre')) c.classList.remove('marcado');
+            });
+            chequearCuantoFalta();
+        };
+
+        document.getElementById('btnBingo').onclick = async () => {
+            const nombre = prompt("¿Quién grita Bingo?");
+            if (nombre) {
+                await updateDoc(refJuego, { ganador: nombre, juegoPausado: true });
+            }
+        };
+
+        // --- FIREBASE ---
+        onSnapshot(refJuego, (snapshot) => {
+            const data = snapshot.data();
+            if(!data) return;
+
+            numerosQueHanSalido = data.historial || [];
+
+            if(data.numeroCantado > 0) {
+                document.getElementById('numActual').innerText = data.numeroCantado;
+                document.getElementById('txtTalla').innerText = data.frase;
+                hablar(data.frase);
+            }
+
+            const histDiv = document.getElementById('historial');
+            histDiv.innerHTML = [...numerosQueHanSalido].reverse()
+                .map(n => `<div class="bola-pequena">${n}</div>`).join('');
+            
+            chequearCuantoFalta();
+        });
+
+        crearCarton();
+    </script>
+</body>
+</html>

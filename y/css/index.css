@@ -1,0 +1,70 @@
+.menu-container {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    border-top: 8px solid var(--rojo-chile);
+}
+
+h1 {
+    color: var(--azul-chile);
+    font-size: 2.5rem;
+    margin-bottom: 0.2rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.subtitulo {
+    color: #636e72;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.btn-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 18px;
+    margin: 15px 0;
+    text-decoration: none;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+}
+
+.btn-jugador {
+    background-color: var(--azul-chile);
+    color: white;
+}
+
+.btn-jugador:hover {
+    background-color: #0873c4;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #065a9a;
+}
+
+.btn-cantante {
+    background-color: var(--oscuro);
+    color: white;
+}
+
+.btn-cantante:hover {
+    background-color: #1e2425;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #000;
+}
+
+/* Efecto de fondo sutil para el body */
+body {
+    background: linear-gradient(135deg, #f0f2f5 0%, #dcdde1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
